@@ -1,0 +1,4 @@
+tr:hover td {
+    background-color: #E9F5FA !important;
+    transition: all 0.3s ease;
+}

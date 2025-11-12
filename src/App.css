@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root{
+  --text-theme :#844fc1
+}
+body {
+  font-family: 'Poppins', sans-serif !important;
+  background-color: #f8f9fa !important;
+}
+
+.text-xs {
+  font-size: 14px;
+}
+
+.Toastify__toast .Toastify {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 16px;
+}
+
+.sub-menu-wrapper.hide {
+  display: none;
+}
+
+.sub-menu-wrapper.show {
+  display: block;
+}
+
+.new-user-img {
+  cursor: pointer;
+  object-fit: cover;
+
+  max-height: 250px;
+
+}
+
+.text-primary {
+  color: #844fc1 !important;
+}
+
+.bg-primary {
+  background-color: #844fc1 !important;
+}
+
+.text-theme {
+  color: #844fc1 !important;
+}
+
+.bg-theme {
+  background-color: #844fc1 !important;
+}
+
+.form-group {
+  margin-bottom: 10px;
+}
+
+.dropdown-menu {
+  left: -100px;
+  position: absolute;
+  will-change: transform;
+  top: 0px;
+  left: 0px;
+  transform: translate3d(-125px, 40px, 0px);
+  z-index: 100;
+}
+
+.profile-dropdown {
+  cursor: pointer;
+}
+
+
+
+table th {
+  text-align: center;
+  text-transform: uppercase;
+}
+
+table a {
+  text-decoration: none;
+}
+
+.bg-disabled {
+  background-color: #cdcdcd60 !important;
+  border: 1px solid #000 !important;
+
+  &:hover {
+    color: #000 !important;
+  }
+}
+
+.navbar .navbar-brand-wrapper .navbar-brand-inner-wrapper .navbar-brand img {
+  height: unset !important;
+
+}
+
+
+.presentation .nav-link{
+  color: var(--text-theme);
+}
