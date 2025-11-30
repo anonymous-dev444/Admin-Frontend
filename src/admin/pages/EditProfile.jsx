@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import Spinner from "../../ui/Spinner";
 import { toast } from "react-toastify";
 import { useRef } from "react";
+import { authApi } from "../../api/authApi";
 
 const EditProfile = () => {
   const { userData, isLoading, checkAuth } = useAuth();
@@ -37,36 +38,13 @@ const EditProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const data = new FormData();
-      for (let key in formData) {
-        if (formData[key] !== "" && formData[key] !== null) {
-          data.append(key, formData[key]);
-        }
-      }
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/api/auth/update-profile/${
-          userData.user_id
-        }`,
-        {
-          method: "PUT",
-          credentials: "include",
-          body: data,
-        }
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.message);
-      } else if (res.ok) {
-        const data = await res.json();
-        toast.success(data.message);
-        console.log(data);
-        setFormData(data.user);
-        await checkAuth();
-      }
-    } catch (error) {
-      throw error;
+      const data = await authApi.updateProfile(userData.user_id, formData);
+      toast.success(data.message);
+      setFormData(data.user);
+      await checkAuth(); // refresh session
+    } catch (err) {
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -74,7 +52,7 @@ const EditProfile = () => {
 
   if (!userData || loading) return <Spinner size="lg" />;
   return (
-    <div>
+    <>
       <div className="col-12 grid-margin">
         <div className="card">
           <div className="card-body">
@@ -89,13 +67,6 @@ const EditProfile = () => {
                   <div className="form-group d-flex justify-content-center align-items-center  ">
                     <div className="profile-img w-50 rounded-full overflow-hidden">
                       <img
-                        // src={
-                        //   userData.image != null
-                        //     ? import.meta.env.VITE_BACKEND_API +
-                        //       "/uploads/" +
-                        //       userData.image
-                        //     : profilePreview
-                        // }
                         src={
                           profilePreview
                             ? profilePreview
@@ -237,7 +208,7 @@ const EditProfile = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

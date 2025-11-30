@@ -7,6 +7,9 @@ import Spinner from "../../ui/Spinner";
 import { toast } from "react-toastify";
 import { useDataRefresh } from "../context/DataRefreashContext";
 
+import { authApi } from "../../api/authApi";
+import { usersApi } from "../../api/usersApi";
+
 //--------------Lead Modals---------------
 
 export const AddLeadModal = () => {
@@ -519,42 +522,13 @@ export const AddUserModal = () => {
     setLoading(true);
 
     try {
-      const data = new FormData();
-      data.append("name", formData.name);
-      data.append("mobile", formData.mobile);
-      data.append("gender", formData.gender);
-      data.append("role", formData.role);
-      data.append("email", formData.email);
-      data.append("password", formData.password);
-
-      // Append image file (must match multer field name: 'image')
-      if (formData.image) {
-        data.append("image", formData.image);
-      }
-
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/api/auth/register`,
-        {
-          method: "POST",
-          credentials: "include",
-          body: data,
-        }
-      );
-
-      const responseData = await res.json();
-
-      if (!res.ok) {
-        toast.error(responseData.message);
-      } else {
-        toast.success(responseData.message);
-        clearForm();
-        // trigger refresh in parent if passed
-        await callRefresh("userList");
-        document.querySelector("#addUser .btn-close")?.click();
-      }
-    } catch (error) {
-      console.error("Registration error:", error);
-      toast.error("Registration failed. Please try again.");
+      const res = await authApi.registerUser(formData);
+      toast.success(res.message);
+      clearForm();
+      await callRefresh("userList");
+      document.querySelector("#addUser .btn-close")?.click();
+    } catch (err) {
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -746,17 +720,8 @@ export const EditUserModal = ({ editUserId = null, onUserUpdate }) => {
   // ✅ Fetch user data when modal opens or ID changes
   const getUser = async () => {
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/get-user/${editUserId}`,
-        { method: "GET", credentials: "include" }
-      );
-
-      if (!res.ok) throw new Error("Failed to fetch user");
-
-      const data = await res.json();
-      const user = data.user;
+      const user = await usersApi.getUserById(editUserId);
       setInitialData(user);
-
       setFormData({
         name: user.name || "",
         mobile: user.mobile || "",
@@ -766,14 +731,13 @@ export const EditUserModal = ({ editUserId = null, onUserUpdate }) => {
         password: "",
         image: user.image || null,
       });
-
       setPreview(
-        user.image != null
+        user.image
           ? `${import.meta.env.VITE_BACKEND_API}/uploads/${user.image}`
           : "/assets/img/profile/Default_pfp.png"
       );
-    } catch (error) {
-      throw new Error("Failed to fetch user");
+    } catch (err) {
+      toast.error("Failed to fetch user");
     }
   };
   // ✅ Fetch when ID changes
@@ -811,49 +775,18 @@ export const EditUserModal = ({ editUserId = null, onUserUpdate }) => {
   const handleImageClick = () => fileInputRef.current.click();
 
   // ✅ Submit edited user data
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const data = new FormData();
-      for (let key in formData) {
-        if (formData[key] !== "" && formData[key] !== null) {
-          data.append(key, formData[key]);
-        }
-      }
-
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/edit-user/${editUserId}`,
-        {
-          method: "PUT",
-          body: data,
-          credentials: "include",
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error(result.message || "Update failed");
-      } else {
-        const data = await res.json();
-        const user = data.user;
-        setFormData({
-          name: user.name || "",
-          mobile: user.mobile || "",
-          gender: user.gender || "",
-          role: user.role || "",
-          email: user.email_id || "",
-          password: "",
-          image: user.image || null,
-        });
-        await checkAuth();
-        toast.success(data.message || "User updated successfully ✅");
-      }
-
-      if (onUserUpdate) onUserUpdate(); // trigger refresh in parent if passed
+      const result = await usersApi.updateUser(editUserId, formData);
+      toast.success(result.message || "User updated successfully ✅");
+      await checkAuth();
+      if (onUserUpdate) onUserUpdate();
       document.querySelector("#editUser .btn-close")?.click();
-    } catch (error) {
-      toast.error(error.message);
+    } catch (err) {
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -1055,26 +988,14 @@ export const DeleteModal = ({ id, route, onUpdate }) => {
   const deleteUser = async () => {
     if (loading) return;
     setLoading(true);
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/${route}/${id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
 
-      if (!res.ok) {
-        toast.error("Something went wrong!");
-      } else {
-        const data = await res.json();
-        toast.success(data.message || "User deleted successfully!");
-        if (onUpdate) onUpdate(); // trigger refresh in parent if passed
-        document.querySelector("#delete .btn-close")?.click();
-      }
-    } catch (error) {
-      toast.error("Error deleting user!");
-      console.error(error);
+    try {
+      const data = await usersApi.deleteUser(route, id);
+      toast.success(data.message || "User deleted successfully!");
+      if (onUpdate) onUpdate();
+      document.querySelector("#delete .btn-close")?.click();
+    } catch (err) {
+      toast.error(err.message || "Error deleting user!");
     } finally {
       setLoading(false);
     }
@@ -1135,25 +1056,9 @@ export const ChangeUserPassword = ({ id }) => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/change-password/${id}`,
-        {
-          method: "post",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ password: password }),
-        }
-      );
-
-      if (!res.ok) {
-        toast.error("Something went wrong!");
-      } else {
-        const data = await res.json();
-        toast.success(data.message || "Password Changed!");
-        document.querySelector("#changePassword .btn-close")?.click();
-      }
+      const data = await usersApi.changePassword(id, password);
+      toast.success(data.message || "Password Changed!");
+      document.querySelector("#changePassword .btn-close")?.click();
     } catch (error) {
       toast.error("Error deleting user!");
       console.error(error);

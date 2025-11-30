@@ -14,15 +14,18 @@ import { ShowEmail, ShowPhone } from "../../lib/ShowFunctions";
 import { UserListSearchBar } from "../AdminComponents/SearchBars";
 import { toast } from "react-toastify";
 
+import { usersApi } from "../../api/usersApi";
+
 const UserList = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const currentPage = parseInt(queryParams.get("page")) || 1;
-
-  //States
+  //Hooks
   const { userData, isLoading, isAuthenticated } = useAuth();
   const { registerRefresh } = useDataRefresh();
+
+  //States
   const [userId, setUserId] = useState(null);
   const [editUserId, setEditUserId] = useState(null);
 
@@ -58,29 +61,14 @@ const UserList = () => {
   const getAllUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/get-all-users?${params}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
+      const { users, totalPages, currentPage } = await usersApi.getAllUsers(
+        params
       );
-      if (!res.ok) {
-        const data = await res.json();
-        console.log(data);
-        toast.error(data.message);
-        setUsers(data.users);
-        if (data.redirectUrl) {
-          navigate(data.redirectUrl);
-        }
-      } else if (res.ok) {
-        const data = await res.json();
-        setUsers(data.users);
-        setTotalPages(data.totalPages || 1);
-        setPage(data.currentPage || 1);
-      }
-    } catch (error) {
-      console.log(error);
+      setUsers(users);
+      setTotalPages(totalPages);
+      setPage(currentPage);
+    } catch (err) {
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -106,6 +94,7 @@ const UserList = () => {
           setPage(1);
           setAppliedFilters(filters);
         }}
+        setAppliedFilters={setAppliedFilters}
       />
 
       {loading ? (
@@ -181,24 +170,22 @@ const UserList = () => {
                                     className="dropdown-menu"
                                     aria-labelledby="dropdownMenuIconButton3"
                                   >
-                                
                                     <Link
                                       className="dropdown-item"
                                       to={`/admin/profile/${user._id}`}
                                     >
                                       <i className="typcn typcn-eye"></i> View
                                     </Link>
-                                        {(userData && userData.role === "Admin") ||
-                                    userData.role === "Super Admin" ? (
+                                    {(userData && userData.role === "Admin") ||
+                                    (userData &&
+                                      userData.role === "Super Admin") ? (
                                       <Link
                                         className="dropdown-item"
                                         href="#"
                                         type="button"
                                         data-bs-toggle="modal"
                                         data-bs-target="#editUser"
-                                        onClick={() =>
-                                          setEditUserId(user.user_id)
-                                        }
+                                        onClick={() => setEditUserId(user._id)}
                                       >
                                         <i className="typcn typcn-pen"></i> Edit
                                       </Link>

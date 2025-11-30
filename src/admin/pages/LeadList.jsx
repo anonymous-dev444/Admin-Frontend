@@ -11,10 +11,9 @@ import {
 import { LeadListSearchBar } from "../AdminComponents/SearchBars";
 import { toast } from "react-toastify";
 
-
+import { leadsApi } from "../../api/leadsApi";
 
 const LeadList = () => {
-
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
@@ -25,12 +24,10 @@ const LeadList = () => {
   const [leads, setLeads] = useState([]); //array of leads
   const [leadId, setLeadId] = useState(null); //for edit lead
 
-
   //Pegination
   const [page, setPage] = useState(currentPage);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-
 
   //Search Filter
   const [filters, setFilters] = useState({
@@ -38,7 +35,6 @@ const LeadList = () => {
     email_id: queryParams.get("email_id") || "",
     mobile: queryParams.get("mobile") || "",
   });
-
 
   const [appliedFilters, setAppliedFilters] = useState(filters);
   const params = new URLSearchParams({
@@ -49,36 +45,20 @@ const LeadList = () => {
     mobile: appliedFilters.mobile,
   }).toString();
 
-
-//Fetching all Leads
+  //Fetching all Leads
   const getAllLeads = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/get-all-leads?${params}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        navigate(data.redirectUrl);
-        toast.error(data.message);
-        setLeads(data.leads);
-      } else if (res.ok) {
-        const data = await res.json();
-        setLeads(data.leads);
-        setTotalPages(data.totalPages || 1);
-        setPage(data.currentPage || 1);
-      }
+      const res = await leadsApi.getAllLeads(params);
+      setLeads(res.leads);
+      setTotalPages(res.totalPages || 1);
+      setPage(res.currentPage || 1);
     } catch (error) {
       throw new Error(error);
     } finally {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     registerRefresh("leadList", getAllLeads);
@@ -87,9 +67,6 @@ const LeadList = () => {
     getAllLeads();
   }, [page, appliedFilters]);
 
-
-
-  
   return (
     <>
       <DeleteModal id={leadId} route="delete-lead" onUpdate={getAllLeads} />
@@ -99,6 +76,7 @@ const LeadList = () => {
       <LeadListSearchBar
         filters={filters}
         setFilters={setFilters}
+        setAppliedFilters={setAppliedFilters}
         onSearch={() => {
           setPage(1);
           setAppliedFilters(filters);

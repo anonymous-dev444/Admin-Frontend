@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Spinner from "../../ui/Spinner";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { UsersActivitySearchBar } from "../AdminComponents/SearchBars";
+import { activityApi } from "../../api/activityApi";
 
 const UsersActivity = () => {
   const navigate = useNavigate();
@@ -35,22 +36,10 @@ const UsersActivity = () => {
   const getUsersActivites = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_BACKEND_API}/get-users-activities?${params}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-      if (!res.ok) {
-        const data = await res.json();
-        data.redirectUrl ? navigate(data.redirectUrl) : "";
-      } else {
-        const data = await res.json();
-        setActivities(data.activities);
-        setTotalPages(data.totalPages || 1);
-        setPage(data.currentPage || 1);
-      }
+      const res = await activityApi.getUsersActivites(params);
+      setActivities(res.activities);
+      setTotalPages(res.totalPages || 1);
+      setPage(res.currentPage || 1);
     } catch (error) {
       console.log(error);
       throw new Error(error);

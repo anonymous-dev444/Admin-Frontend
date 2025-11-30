@@ -16,7 +16,6 @@ const useGetCompany = () => {
       }
 
       const data = await res.json();
-      console.log(data);
       setCompanyDetails(data.company);
     } catch (error) {
       throw new Error(error);

@@ -66,11 +66,11 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/profile" element={<Profile />} />
           <Route path="/admin/profile/:id" element={<ViewProfile />} />
-          <Route path="/admin/user-rights/:id" element={<ViewProfile />} />
+          <Route path="/admin/rights/:id" element={<ViewProfile />} />
           <Route path="/admin/edit/profile" element={<EditProfile />} />
           <Route path="/admin/change-password" element={<ChangePassword />} />
           <Route path="/admin/lead-list" element={<LeadList />} />
-          <Route path="/admin/user-list" element={<UserList />} />
+          <Route path="/admin/users-list" element={<UserList />} />
           <Route path="/admin/settings" element={<ManageCompany />} />
           <Route path="/admin/users-activity" element={<UsersActivity />} />
 
